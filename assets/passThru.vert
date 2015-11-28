@@ -7,9 +7,13 @@ in vec2		    ciTexCoord0;
 
 out vec4 vColor;
 out vec2 vTexCoord0;
+out vec4 vVertex;
+
 
 void main(void) {
     vColor = ciColor;
     vTexCoord0 = ciTexCoord0;
     gl_Position = ciModelViewProjection * ciPosition;
+
+    vVertex = ciPosition;
 }

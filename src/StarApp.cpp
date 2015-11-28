@@ -41,7 +41,7 @@ class StarApp : public App {
     float           mRadius;
     
     
-    bool            mLights;
+    float            mLights;
     
     //PASS
     void drawRenderPass();
@@ -50,7 +50,7 @@ class StarApp : public App {
     void drawCorona();
     void drawSphere();
     void drawGlows();
-    
+    void drawNebulas();
     
     
     // SHADERS  and   TEXTURES
@@ -80,6 +80,16 @@ class StarApp : public App {
     Controller			mController;
     void                updateParticles();
     
+    //TIMERS
+    void setupTime();
+    void updateTime();
+    float			mTime;				// Time elapsed in real world seconds
+    float			mTimeElapsed;		// Time elapsed in simulation seconds
+    float			mTimeMulti;			// Speed at which time passes
+    float			mTimeAdjusted;		// Amount of time passed between last frame and current frame
+    float			mTimer;				// A resetting counter for determining if a Tick has occured
+    bool            mTick;
+    
     //Params
     params::InterfaceGlRef		mParams;
 };
@@ -97,6 +107,17 @@ void StarApp::setup()
     
     setupCamera();
     
+    setupTime();
+}
+
+void StarApp::setupTime()
+{
+    // TIME
+    mTime			= (float)app::getElapsedSeconds();
+    mTimeElapsed	= 0.0f;
+    mTimeMulti		= 60.0f;
+    mTimer			= 0.0f;
+    mTick			= false;
 }
 
 void StarApp::createSphere()
@@ -109,6 +130,8 @@ void StarApp::createSphere()
     
     
     float solarRadius = mStar.mMaxRadius * 0.25f;
+    
+    mRadius = solarRadius;
     mStartColor = 0.6f;
     
     console()<<"solar radius: "<<solarRadius<<std::endl;
@@ -117,18 +140,17 @@ void StarApp::createSphere()
     int sphereResolution = 32;
     mSphereBatch = gl::Batch::create(geom::Sphere().radius(solarRadius).subdivisions(sphereResolution), shader );
     
-    
-    mLights = false;
+    mLights = 1.0;
 }
 
 void StarApp::setupCamera()
 {
-    float verticalFOV = 45.0f;
+    float verticalFOV = 65.0f;
     float aspectRatio = getWindowAspectRatio();
-    float nearClip = 0.1f;
-    float farClip = 50.0f;
-    vec3 cameraPosition = vec3(0, 0.1, -1);
-    vec3 cameraTarget = vec3(0);
+    float nearClip = 5.0f;
+    float farClip = 30000.0f;
+    vec3 cameraPosition = vec3(0, 0, -366.0);
+    vec3 cameraTarget = vec3(0, 0, 0);
     vec3 cameraUpAxis = vec3(0, 1, 0);
     
     mCamera.setPerspective(verticalFOV, aspectRatio, nearClip, farClip);
@@ -142,9 +164,9 @@ void StarApp::loadShaders()
     try {
         //mGradientShader = gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "gradient.frag" ) );
         //mRoomShader		= gl::GlslProg::create( loadAsset( "room.vert" ), loadAsset( "room.frag" ) );
-        //mStarShader		= gl::GlslProg::create( loadAsset( "star.vert" ), loadAsset( "star.frag" ) );
+       // mStarShader		= gl::GlslProg::create( loadAsset( "star.vert" ), loadAsset( "star.frag" ) );
         mGlowShader		= gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "glow.frag" ) );
-        //mNebulaShader	= gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "nebula.frag" ) );
+        mNebulaShader	= gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "nebula.frag" ) );
         mCoronaShader	= gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "corona.frag" ) );
         //mDustShader		= gl::GlslProg::create( loadAsset( "passThruColor.vert" ), loadAsset( "dust.frag" ) );
         //mPlanetShader	= gl::GlslProg::create( loadAsset( "passThruNormals.vert" ), loadAsset( "planet.frag" ) );
@@ -195,7 +217,10 @@ void StarApp::keyDown(KeyEvent event)
             mRenderPass = 5;
             break;
         case 'a':
-            mLights = !mLights;
+            mLights = 0.0;
+            break;
+        case 's':
+            mLights = 1.0;
             break;
         default:
             break;
@@ -209,7 +234,23 @@ void StarApp::update()
 
 void StarApp::updateParticles()
 {
-
+    
+    updateTime();
+    
+    mStar.update( mTimeAdjusted );
+    
+    int numGlowsToSpawn = 14;
+    mController.addGlows( mStar, mLights, numGlowsToSpawn );
+    
+    // ADD NEBULAS
+    int numNebulasToSpawn = 15;
+    mController.addNebulas( mStar, numNebulasToSpawn );
+    
+    // ADD DUSTS
+    int numDustsToSpawn = 500;
+    mController.addDusts( mStar, numDustsToSpawn );
+    
+    mController.update( mTimeAdjusted );
 
 }
 
@@ -231,23 +272,51 @@ void StarApp::drawCorona()
 
 void StarApp::drawGlows()
 {
+    {
+        gl::ScopedGlslProg scpGlsl(mGlowShader);
+        gl::ScopedTextureBind scpGlow(mGlowTex, 0);
+        gl::ScopedTextureBind scpSmallGrid(mSmallGridTex, 1);
+        gl::ScopedTextureBind scpSpectrumTex(mSpectrumTex, 2);
     
-    gl::ScopedGlslProg scpGlsl(mGlowShader);
-    gl::ScopedTextureBind scpGlow(mGlowTex, 0);
-    gl::ScopedTextureBind scpSmallGrid(mSmallGridTex, 1);
-    gl::ScopedTextureBind scpSpectrumTex(mSpectrumTex, 2);
+        mGlowShader->uniform( "glowTex", 0 );
+        mGlowShader->uniform( "gridTex", 1 );
+        mGlowShader->uniform( "spectrumTex", 2 );
+        mGlowShader->uniform( "color", mStartColor );
+        mGlowShader->uniform( "power", mLights );
+        mGlowShader->uniform( "starRadius", mStar.mRadiusDrawn );
+        vec3 right = vec3(1, 0, 0);
+        vec3 up	= vec3(0, 1, 0);
+        
+        auto mGlows = mController.getGlows();
+        for(auto & glows : mGlows){
+            mGlowShader->uniform( "alpha", glows.mAgePer );
+            glows.draw(right, up);
+        }
     
+        //mController.drawGlows( mGlowShader, right, up );
+    }
+}
+
+void StarApp::drawNebulas()
+{
+    {
+        gl::ScopedGlslProg scpGlsl(mNebulaShader);
     
-    mGlowShader->uniform( "glowTex", 0 );
-    mGlowShader->uniform( "gridTex", 1 );
-    mGlowShader->uniform( "spectrumTex", 2 );
-    mGlowShader->uniform( "color", mStartColor );
-    mGlowShader->uniform( "power", mLights );
-    mGlowShader->uniform( "starRadius", mStar.mRadiusDrawn );
-    vec3 right = vec3(1, 0, 0);
-    vec3 up	= vec3(0, 1, 0);
+        gl::ScopedTextureBind scpGlow(mNebulaTex, 0);
+        gl::ScopedTextureBind scpSmallGrid(mSmallGridTex, 1);
+        gl::ScopedTextureBind scpSpectrumTex(mSpectrumTex, 2);
     
-    mController.drawGlows( mGlowShader, right, up );
+        mNebulaShader->uniform( "nebulaTex", 0 );
+        mNebulaShader->uniform( "gridTex", 1 );
+        mNebulaShader->uniform( "spectrumTex", 2 );
+        mNebulaShader->uniform( "color", mStar.mColor );
+        mNebulaShader->uniform( "power", mLights );
+        mNebulaShader->uniform( "starRadius", mStar.mRadiusDrawn );
+        vec3 right = vec3(1, 0, 0);
+        vec3 up	= vec3(0, 1, 0);
+    
+        mController.drawNebulas( mNebulaShader, right, up );
+    }
 }
 
 void StarApp::drawSphere()
@@ -264,14 +333,39 @@ void StarApp::drawRenderPass()
 {
     switch (mRenderPass) {
         case 1:
+            gl::enableDepthWrite();
+            gl::enableDepthRead();
             drawSphere();
             break;
         case 2:
+            gl::enableDepthWrite();
+            gl::enableDepthRead();
+            gl::enableAlphaBlending();
             drawCorona();
             break;
         case 3:
+            gl::disableDepthWrite();
+             gl::enableAlphaBlending();
+            
+            gl::enable( GL_TEXTURE_2D );
+            gl::color( ColorA( 1, 1, 1, 1 ) );
             drawGlows();
+            
+            gl::disable( GL_TEXTURE_2D );
+            
+            //gl::enableAdditiveBlending();
             break;
+        case 4:
+            gl::disableDepthWrite();
+            gl::enableAlphaBlending();
+            
+            gl::enable( GL_TEXTURE_2D );
+            gl::color( ColorA( 1, 1, 1, 1 ) );
+            drawNebulas();
+            
+            gl::disable( GL_TEXTURE_2D );
+            break;
+            
         default:
             break;
     }
@@ -282,8 +376,7 @@ void StarApp::draw()
 	gl::clear( Color( 0.2, 0.2, 0.2 ) );
 
     
-    gl::enableDepthWrite();
-    gl::enableDepthRead();
+   
     
     {
         gl::ScopedMatrices mat;
@@ -292,6 +385,24 @@ void StarApp::draw()
         drawRenderPass();
     }
     
+}
+
+void StarApp::updateTime()
+{
+    float prevTime	= mTime;
+    mTime			= (float)app::getElapsedSeconds();
+    float dt		= mTime - prevTime;
+    mTimeAdjusted	= dt * mTimeMulti;
+    mTimeElapsed	+= mTimeAdjusted;
+    
+    mTimer += mTimeAdjusted;
+    mTick = false;
+    if( mTimer > 1.0f ){
+        mTick = true;
+        mTimer = 0.0f;
+    }
+    
+    //console()<<mTimeAdjusted<<std::endl;
 }
 
 CINDER_APP( StarApp, RendererGl )

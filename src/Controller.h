@@ -70,6 +70,9 @@ public:
     void addCMNebulas( const ci::vec3 &starPos, float starRadius, float radiusMulti, int amt );
     void addCMGlows( const ci::vec3 &starPos, float starRadius, int amt );
     
+    std::vector<Glow> getGlows(){return mGlows;}
+    std::vector<Nebula> getNebulas(){return mNebulas;}
+    
     std::vector<Glow>	mGlows;
     std::vector<Nebula>	mNebulas;
     std::vector<Dust>	mDusts;
