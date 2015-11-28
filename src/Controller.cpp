@@ -93,20 +93,15 @@ void Controller::drawNebulas( gl::GlslProgRef shader, const vec3 &right, const v
 
 void Controller::drawDusts()
 {
-    /*
-     if( mTotalDustVerts > 0 ){
-     glEnableClientState( GL_VERTEX_ARRAY );
-     glEnableClientState( GL_COLOR_ARRAY );
-     glVertexPointer( 3, GL_FLOAT, sizeof(DustVertex), mDustVerts );
-     glColorPointer( 4, GL_FLOAT, sizeof(DustVertex), &mDustVerts[0].color );
-     
-     glDrawArrays( GL_POINTS, 0, mTotalDustVerts );
-     
-     glDisableClientState( GL_VERTEX_ARRAY );
-     glDisableClientState( GL_COLOR_ARRAY );
-     }
-     gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
-     */
+    if( mTotalDustVerts > 0 ){
+        gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+        gl::VertBatch vert(GL_POINTS);
+        for(int i = 0; i < mTotalDustVerts; i++){
+            vert.vertex(mDustVerts[i].vertex);
+            vert.color(mDustVerts[i].color);
+        }
+        vert.draw();
+    }
 }
 
 void Controller::addGlows( const Star &star, float power, int amt )

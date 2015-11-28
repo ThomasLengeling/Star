@@ -9,6 +9,8 @@
 #include "cinder/gl/Gl.h"
 #include "cinder/gl/GlslProg.h"
 #include "cinder/gl/Vbo.h"
+#include "cinder/gl/Batch.h"
+
 #include "cinder/Rand.h"
 
 #include "Star.h"
@@ -20,6 +22,7 @@
 class Controller {
 public:
     struct DustVertex {
+    public:
         ci::vec3 vertex;
         ci::vec4 color;
     };

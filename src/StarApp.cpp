@@ -51,15 +51,19 @@ class StarApp : public App {
     void drawSphere();
     void drawGlows();
     void drawNebulas();
+    void drawDust();
+    void drawCircle();
     
+    //Random
+    vec2				mRandSeed;
+    int					mRandIterations;
+    void                randSeed();
     
     // SHADERS  and   TEXTURES
     void loadTextures();
     void loadShaders();
 
     gl::GlslProgRef		mGradientShader;
-    gl::GlslProgRef		mRoomShader;
-    gl::GlslProgRef		mStarShader;
     gl::GlslProgRef		mGlowShader;
     gl::GlslProgRef		mNebulaShader;
     gl::GlslProgRef		mDustShader;
@@ -98,7 +102,7 @@ void StarApp::setup()
 {
     setWindowSize(1024, 768);
     
-    mRenderPass = 1;
+    mRenderPass = 7;
     
     loadShaders();
     loadTextures();
@@ -162,13 +166,11 @@ void StarApp::loadShaders()
 {
     // LOAD SHADERS
     try {
-        //mGradientShader = gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "gradient.frag" ) );
-        //mRoomShader		= gl::GlslProg::create( loadAsset( "room.vert" ), loadAsset( "room.frag" ) );
-       // mStarShader		= gl::GlslProg::create( loadAsset( "star.vert" ), loadAsset( "star.frag" ) );
+        mGradientShader = gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "gradient.frag" ) );
         mGlowShader		= gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "glow.frag" ) );
         mNebulaShader	= gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "nebula.frag" ) );
         mCoronaShader	= gl::GlslProg::create( loadAsset( "passThru.vert" ), loadAsset( "corona.frag" ) );
-        //mDustShader		= gl::GlslProg::create( loadAsset( "passThruColor.vert" ), loadAsset( "dust.frag" ) );
+        mDustShader		= gl::GlslProg::create( loadAsset( "passThruColor.vert" ), loadAsset( "dust.frag" ) );
         //mPlanetShader	= gl::GlslProg::create( loadAsset( "passThruNormals.vert" ), loadAsset( "planet.frag" ) );
     } catch( gl::GlslProgCompileExc e ) {
         std::cout << e.what() << std::endl;
@@ -216,11 +218,21 @@ void StarApp::keyDown(KeyEvent event)
         case '5':
             mRenderPass = 5;
             break;
+        case '6':
+            mRenderPass = 6;
+            break;
+        case '7':
+            mRenderPass = 7;
+            break;
         case 'a':
             mLights = 0.0;
             break;
         case 's':
             mLights = 1.0;
+            break;
+        case 'r':
+            randSeed();
+            mRandIterations ++;
             break;
         default:
             break;
@@ -257,7 +269,7 @@ void StarApp::updateParticles()
 void StarApp::drawCorona()
 {
     gl::color( ColorA( 1, 1, 1, 1 ) );
-    float radius = mRadius * 1.8f;
+    float radius = mStar.mRadius * 1.8f;
     
     gl::ScopedGlslProg scpGlsl(mCoronaShader);
     gl::ScopedTextureBind scpCorina(mCoronaTex, 0);
@@ -329,6 +341,59 @@ void StarApp::drawSphere()
     mSphereBatch->draw();
 }
 
+void StarApp::drawDust()
+{
+    gl::pushModelView();
+    float per = 1.75f * mStar.mRadius/mStar.mMaxRadius;
+    gl::scale( vec3( per, per, per ) );
+    
+    
+    gl::ScopedGlslProg scpGlsl(mDustShader);
+    gl::ScopedTextureBind scpSpectrum(mSpectrumTex, 0);
+    
+    mDustShader->uniform( "spectrumTex", 0 );
+    mDustShader->uniform( "color", mStar.mColor );
+    mDustShader->uniform( "power", mLights );
+    mController.drawDusts();
+    
+    gl::popModelView();
+}
+
+void StarApp::drawCircle()
+{
+    gl::color( ColorA( 1, 1, 1, 1 ) );
+    float radius = mStar.mRadius;
+    radius *= ( 5.0f + mLights );
+
+    
+    gl::ScopedGlslProg scpGlsl(mGradientShader);
+    gl::ScopedTextureBind scpGrid(mGridTex, 0);
+    gl::ScopedTextureBind scpSpectrum(mSpectrumTex, 1);
+    
+    mGradientShader->uniform( "gridTex", 0 );
+    mGradientShader->uniform( "spectrumTex", 1 );
+    mGradientShader->uniform( "color", mStar.mColor );
+    mGradientShader->uniform( "radius", radius );
+    mGradientShader->uniform( "starRadius", mStar.mRadiusDrawn );
+    mGradientShader->uniform( "power", mLights );
+    mGradientShader->uniform( "time", (float)getElapsedSeconds() );
+    mGradientShader->uniform( "randIterations", mRandIterations );
+    
+    mGradientShader->uniform( "randSeed", mRandSeed );
+    mGradientShader->uniform( "unit", 0 );
+    gl::drawSolidRect( Rectf( -radius, -radius, radius, radius ) );
+    
+    mGradientShader->uniform( "randSeed", mRandSeed * 1.5f );
+    mGradientShader->uniform( "unit", 2 );
+    gl::drawSolidRect( Rectf( -radius, -radius, radius, radius ) );
+    
+}
+
+void StarApp::randSeed()
+{
+    mRandSeed	= Rand::randVec2() * Rand::randFloat( 100.0f );
+}
+
 void StarApp::drawRenderPass()
 {
     switch (mRenderPass) {
@@ -338,12 +403,19 @@ void StarApp::drawRenderPass()
             drawSphere();
             break;
         case 2:
+            
+            gl::enable( GL_TEXTURE_2D );
+            gl::disableDepthWrite();
+            
+            drawCircle();
+            break;
+        case 3:
             gl::enableDepthWrite();
             gl::enableDepthRead();
             gl::enableAlphaBlending();
             drawCorona();
             break;
-        case 3:
+        case 4:
             gl::disableDepthWrite();
              gl::enableAlphaBlending();
             
@@ -355,7 +427,7 @@ void StarApp::drawRenderPass()
             
             //gl::enableAdditiveBlending();
             break;
-        case 4:
+        case 5:
             gl::disableDepthWrite();
             gl::enableAlphaBlending();
             
@@ -366,7 +438,37 @@ void StarApp::drawRenderPass()
             gl::disable( GL_TEXTURE_2D );
             break;
             
-        default:
+        case 6:
+            gl::enableAlphaBlending();
+            drawDust();
+            break;
+            
+        case 7:
+           	gl::disableDepthRead();
+            gl::disableDepthWrite();
+            
+            gl::enableAlphaBlending();
+            
+            gl::enable( GL_TEXTURE_2D );
+            gl::enableDepthRead();
+            gl::enableDepthWrite();
+            
+            gl::disableDepthWrite();
+            
+            gl::enableAdditiveBlending();
+                gl::color( ColorA( 1, 1, 1, 1 ) );
+                drawCircle();
+                drawCorona();
+                drawGlows();
+                drawNebulas();
+    
+            gl::disable( GL_TEXTURE_2D );
+            
+            drawDust();
+
+            gl::disableDepthRead();
+            gl::disableDepthWrite();
+            
             break;
     }
 }

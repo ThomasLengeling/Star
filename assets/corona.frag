@@ -22,5 +22,5 @@ void main()
 	vec3 onColor		= vec3( spectrumCol );
 
 	oColor.rgb	= mix( offColor, onColor, power );
-  oColor.a    = coronaAlpha;
+    oColor.a    = coronaAlpha;
 }

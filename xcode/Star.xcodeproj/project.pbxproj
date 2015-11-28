@@ -46,12 +46,8 @@
 		E2701F5A1C095CA100C74583 /* passThruColor.vert in Resources */ = {isa = PBXBuildFile; fileRef = E2701F3B1C095CA100C74583 /* passThruColor.vert */; };
 		E2701F5B1C095CA100C74583 /* passThruNormals.vert in Resources */ = {isa = PBXBuildFile; fileRef = E2701F3C1C095CA100C74583 /* passThruNormals.vert */; };
 		E2701F5C1C095CA100C74583 /* planet.frag in Resources */ = {isa = PBXBuildFile; fileRef = E2701F3D1C095CA100C74583 /* planet.frag */; };
-		E2701F5D1C095CA100C74583 /* room.frag in Resources */ = {isa = PBXBuildFile; fileRef = E2701F3E1C095CA100C74583 /* room.frag */; };
-		E2701F5E1C095CA100C74583 /* room.vert in Resources */ = {isa = PBXBuildFile; fileRef = E2701F3F1C095CA100C74583 /* room.vert */; };
 		E2701F5F1C095CA100C74583 /* smallGrid.png in Resources */ = {isa = PBXBuildFile; fileRef = E2701F401C095CA100C74583 /* smallGrid.png */; };
 		E2701F601C095CA100C74583 /* spectrum.png in Resources */ = {isa = PBXBuildFile; fileRef = E2701F411C095CA100C74583 /* spectrum.png */; };
-		E2701F611C095CA100C74583 /* star.frag in Resources */ = {isa = PBXBuildFile; fileRef = E2701F421C095CA100C74583 /* star.frag */; };
-		E2701F621C095CA100C74583 /* star.vert in Resources */ = {isa = PBXBuildFile; fileRef = E2701F431C095CA100C74583 /* star.vert */; };
 		E2701F651C09708400C74583 /* Glow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2701F631C09708400C74583 /* Glow.cpp */; };
 		E2701F681C09714D00C74583 /* Controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2701F661C09714D00C74583 /* Controller.cpp */; };
 		E2701F6B1C0972C500C74583 /* Nebula.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2701F691C0972C500C74583 /* Nebula.cpp */; };
@@ -103,12 +99,8 @@
 		E2701F3B1C095CA100C74583 /* passThruColor.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = passThruColor.vert; path = ../assets/passThruColor.vert; sourceTree = "<group>"; };
 		E2701F3C1C095CA100C74583 /* passThruNormals.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = passThruNormals.vert; path = ../assets/passThruNormals.vert; sourceTree = "<group>"; };
 		E2701F3D1C095CA100C74583 /* planet.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = planet.frag; path = ../assets/planet.frag; sourceTree = "<group>"; };
-		E2701F3E1C095CA100C74583 /* room.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = room.frag; path = ../assets/room.frag; sourceTree = "<group>"; };
-		E2701F3F1C095CA100C74583 /* room.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = room.vert; path = ../assets/room.vert; sourceTree = "<group>"; };
 		E2701F401C095CA100C74583 /* smallGrid.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smallGrid.png; path = ../assets/smallGrid.png; sourceTree = "<group>"; };
 		E2701F411C095CA100C74583 /* spectrum.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = spectrum.png; path = ../assets/spectrum.png; sourceTree = "<group>"; };
-		E2701F421C095CA100C74583 /* star.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = star.frag; path = ../assets/star.frag; sourceTree = "<group>"; };
-		E2701F431C095CA100C74583 /* star.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = star.vert; path = ../assets/star.vert; sourceTree = "<group>"; };
 		E2701F631C09708400C74583 /* Glow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Glow.cpp; path = ../src/Glow.cpp; sourceTree = "<group>"; };
 		E2701F641C09708400C74583 /* Glow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Glow.h; path = ../src/Glow.h; sourceTree = "<group>"; };
 		E2701F661C09714D00C74583 /* Controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Controller.cpp; path = ../src/Controller.cpp; sourceTree = "<group>"; };
@@ -248,12 +240,8 @@
 				E2701F3B1C095CA100C74583 /* passThruColor.vert */,
 				E2701F3C1C095CA100C74583 /* passThruNormals.vert */,
 				E2701F3D1C095CA100C74583 /* planet.frag */,
-				E2701F3E1C095CA100C74583 /* room.frag */,
-				E2701F3F1C095CA100C74583 /* room.vert */,
 				E2701F401C095CA100C74583 /* smallGrid.png */,
 				E2701F411C095CA100C74583 /* spectrum.png */,
-				E2701F421C095CA100C74583 /* star.frag */,
-				E2701F431C095CA100C74583 /* star.vert */,
 				8DACF13F60094F5598B80398 /* CinderApp.icns */,
 				82ABB0DC896F458294BDF6A4 /* Info.plist */,
 			);
@@ -324,7 +312,6 @@
 				E2701F511C095CA100C74583 /* glow.frag in Resources */,
 				E2701F531C095CA100C74583 /* gradient.frag in Resources */,
 				E2701F451C095CA100C74583 /* bigGlow1.png in Resources */,
-				E2701F5D1C095CA100C74583 /* room.frag in Resources */,
 				E2701F571C095CA100C74583 /* nebula.frag in Resources */,
 				E2701F4F1C095CA100C74583 /* cubePosZ.jpg in Resources */,
 				E2701F4E1C095CA100C74583 /* cubePosY.jpg in Resources */,
@@ -339,13 +326,10 @@
 				E2701F4C1C095CA100C74583 /* cubeNegZ.jpg in Resources */,
 				E2701F541C095CA100C74583 /* grid.png in Resources */,
 				E2701F441C095CA100C74583 /* bigGlow0.png in Resources */,
-				E2701F621C095CA100C74583 /* star.vert in Resources */,
 				E2701F591C095CA100C74583 /* passThru.vert in Resources */,
-				E2701F611C095CA100C74583 /* star.frag in Resources */,
 				E2701F581C095CA100C74583 /* nebula.png in Resources */,
 				E2701F551C095CA100C74583 /* icon.icns in Resources */,
 				E2701F561C095CA100C74583 /* iconStar.png in Resources */,
-				E2701F5E1C095CA100C74583 /* room.vert in Resources */,
 				E2701F4A1C095CA100C74583 /* cubeNegX.jpg in Resources */,
 				E2701F471C095CA100C74583 /* CinderApp.icns in Resources */,
 				E2701F501C095CA100C74583 /* dust.frag in Resources */,
