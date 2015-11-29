@@ -1,6 +1,7 @@
 #version 150
 
 uniform sampler2D spectrumTex;
+uniform sampler2D venusTex;
 uniform sampler2D gridTex;
 
 uniform float radius;
@@ -11,6 +12,7 @@ uniform vec2 randSeed;
 uniform int	randIterations;
 uniform int unit;
 uniform float color;
+uniform float brightness;
 
 in vec2 vTexCoord0;
 in vec4 vColor;
@@ -38,6 +40,8 @@ void main()
 {
 	vec3 spectrumCol	= texture( spectrumTex, vec2( color, 0.25 ) ).rgb;
 
+  vec4 texColor     = texture(venusTex, vec2(vTexCoord0.x + time * 0.005, vTexCoord0.y - time * 0.001 ) );
+
 	float dist			= length( vVertex.xyz );
 	float distPer		= dist/radius;
 	float alpha			= 0.0;
@@ -52,8 +56,6 @@ void main()
 	vec4 gridCol		= texture( gridTex, vTexCoord0 );
   float newStarRadius = starRadius + 2.0;
 
-  float brightness = 1.0;
-
   if( unit == 2 ){
     if( dist < newStarRadius ){
       alpha		= drawCircle( dist, newStarRadius * 2.0, 0.98 );
@@ -66,7 +68,6 @@ void main()
       float newDist	= max( dist - newStarRadius, 0.0 );
       float distPer	= clamp( newDist/newRadius, 0.0, 1.0 );
       alpha			= pow( 1.0 - distPer, 1.0 + rand( randSeed ) * 3.0 ) * 0.5;
-
     } else { // CLOSEST PANEL
       newStarRadius	*= 0.5;
       float newRadius	= radius - newStarRadius;
@@ -77,8 +78,12 @@ void main()
   }
 
   offColor	= vec3( gridCol );
-  onColor		= vec3( brightness * spectrumCol );
 
+  if(unit == 2){
+    onColor		= vec3( brightness * spectrumCol) +  vec3(texColor * 0.3);
+  }else{
+    onColor		= vec3( brightness * spectrumCol);
+  }
 //		if( alpha > 0.925 ) onColor *= 1.5;
 
   offAlpha	= clamp( gridCol.a + alpha, 0.0, 1.0 );

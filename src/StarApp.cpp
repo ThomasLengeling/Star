@@ -78,7 +78,7 @@ class StarApp : public App {
     gl::Texture2dRef	mSmallGridTex;
     gl::Texture2dRef	mBigGlow0Tex;
     gl::Texture2dRef	mBigGlow1Tex;
-    gl::Texture2dRef	mIconTex;
+    gl::Texture2dRef	mVenus;
     
     // CONTROLLER
     Controller			mController;
@@ -96,11 +96,12 @@ class StarApp : public App {
     
     //Params
     params::InterfaceGlRef		mParams;
+    float                       mCircleBrightness;
 };
 
 void StarApp::setup()
 {
-    setWindowSize(1024, 768);
+    setWindowSize(1920, 1080);
     
     mRenderPass = 7;
     
@@ -112,6 +113,10 @@ void StarApp::setup()
     setupCamera();
     
     setupTime();
+    
+    mCircleBrightness = 1.0;
+    mParams = params::InterfaceGl::create( "Start", ivec2( 250, 250 ) );
+    mParams->addParam("Brightness", &mCircleBrightness).min(0.0).max(1.0).step(0.01);
 }
 
 void StarApp::setupTime()
@@ -136,7 +141,7 @@ void StarApp::createSphere()
     float solarRadius = mStar.mMaxRadius * 0.25f;
     
     mRadius = solarRadius;
-    mStartColor = 0.6f;
+    mStartColor = 0.95f;
     
     console()<<"solar radius: "<<solarRadius<<std::endl;
     
@@ -181,6 +186,8 @@ void StarApp::loadShaders()
 
 void StarApp::loadTextures()
 {
+    auto fmt = gl::Texture2d::Format().wrap(GL_REPEAT ).mipmap().minFilter( GL_LINEAR_MIPMAP_LINEAR );
+    
     mSpectrumTex		= gl::Texture2d::create( loadImage( loadAsset( "spectrum.png" ) ) );
     mGlowTex			= gl::Texture2d::create( loadImage( loadAsset( "glow.png" ) ) );
     mNebulaTex			= gl::Texture2d::create( loadImage( loadAsset( "nebula.png" ) ) );
@@ -189,7 +196,8 @@ void StarApp::loadTextures()
     mSmallGridTex		= gl::Texture2d::create( loadImage( loadAsset( "smallGrid.png" ) ) );
     mBigGlow0Tex		= gl::Texture2d::create( loadImage( loadAsset( "bigGlow0.png" ) ) );
     mBigGlow1Tex		= gl::Texture2d::create( loadImage( loadAsset( "bigGlow1.png" ) ) );
-    mIconTex			= gl::Texture2d::create( loadImage( loadAsset( "iconStar.png" ) ) );
+    
+    mVenus			= gl::Texture2d::create( loadImage( loadAsset( "venus.jpg" ) ), fmt );
 }
 
 void StarApp::mouseDown( MouseEvent event )
@@ -234,6 +242,15 @@ void StarApp::keyDown(KeyEvent event)
             randSeed();
             mRandIterations ++;
             break;
+        case 't':
+            mStartColor = ci::randFloat(0, 1.0);
+            break;
+        case 'q':
+            mCircleBrightness += 0.01;
+            break;
+        case 'w':
+            mCircleBrightness -= 0.01;
+            break;
         default:
             break;
     }
@@ -251,11 +268,11 @@ void StarApp::updateParticles()
     
     mStar.update( mTimeAdjusted );
     
-    int numGlowsToSpawn = 14;
+    int numGlowsToSpawn = 36;
     mController.addGlows( mStar, mLights, numGlowsToSpawn );
     
     // ADD NEBULAS
-    int numNebulasToSpawn = 15;
+    int numNebulasToSpawn = 36;
     mController.addNebulas( mStar, numNebulasToSpawn );
     
     // ADD DUSTS
@@ -299,13 +316,8 @@ void StarApp::drawGlows()
         vec3 right = vec3(1, 0, 0);
         vec3 up	= vec3(0, 1, 0);
         
-        auto mGlows = mController.getGlows();
-        for(auto & glows : mGlows){
-            mGlowShader->uniform( "alpha", glows.mAgePer );
-            glows.draw(right, up);
-        }
-    
-        //mController.drawGlows( mGlowShader, right, up );
+        mCamera.getBillboardVectors(&right, &up);
+        mController.drawGlows( mGlowShader, right, up );
     }
 }
 
@@ -321,12 +333,13 @@ void StarApp::drawNebulas()
         mNebulaShader->uniform( "nebulaTex", 0 );
         mNebulaShader->uniform( "gridTex", 1 );
         mNebulaShader->uniform( "spectrumTex", 2 );
-        mNebulaShader->uniform( "color", mStar.mColor );
+        mNebulaShader->uniform( "color", mStartColor );
         mNebulaShader->uniform( "power", mLights );
         mNebulaShader->uniform( "starRadius", mStar.mRadiusDrawn );
         vec3 right = vec3(1, 0, 0);
         vec3 up	= vec3(0, 1, 0);
     
+        mCamera.getBillboardVectors(&right, &up);
         mController.drawNebulas( mNebulaShader, right, up );
     }
 }
@@ -352,7 +365,7 @@ void StarApp::drawDust()
     gl::ScopedTextureBind scpSpectrum(mSpectrumTex, 0);
     
     mDustShader->uniform( "spectrumTex", 0 );
-    mDustShader->uniform( "color", mStar.mColor );
+    mDustShader->uniform( "color", mStartColor );
     mDustShader->uniform( "power", mLights );
     mController.drawDusts();
     
@@ -369,15 +382,19 @@ void StarApp::drawCircle()
     gl::ScopedGlslProg scpGlsl(mGradientShader);
     gl::ScopedTextureBind scpGrid(mGridTex, 0);
     gl::ScopedTextureBind scpSpectrum(mSpectrumTex, 1);
+    gl::ScopedTextureBind scpVenus(mVenus, 2);
     
     mGradientShader->uniform( "gridTex", 0 );
     mGradientShader->uniform( "spectrumTex", 1 );
-    mGradientShader->uniform( "color", mStar.mColor );
+    mGradientShader->uniform( "venusTex", 2 );
+    
+    mGradientShader->uniform( "color", mStartColor );
     mGradientShader->uniform( "radius", radius );
     mGradientShader->uniform( "starRadius", mStar.mRadiusDrawn );
     mGradientShader->uniform( "power", mLights );
     mGradientShader->uniform( "time", (float)getElapsedSeconds() );
     mGradientShader->uniform( "randIterations", mRandIterations );
+    mGradientShader->uniform( "brightness", mCircleBrightness);
     
     mGradientShader->uniform( "randSeed", mRandSeed );
     mGradientShader->uniform( "unit", 0 );
@@ -453,12 +470,25 @@ void StarApp::drawRenderPass()
             gl::enableDepthRead();
             gl::enableDepthWrite();
             
+            gl::color(0, 0, 0);
+            float xpos = cos(getElapsedSeconds() * 0.04) * 100;
+            float ypos = sin(getElapsedSeconds() * 0.04) * 100;
+            gl::drawSphere(ci::vec3(xpos, -30, ypos), 1, 32);
+            
             gl::disableDepthWrite();
             
             gl::enableAdditiveBlending();
                 gl::color( ColorA( 1, 1, 1, 1 ) );
-                drawCircle();
-                drawCorona();
+            
+            
+                {
+                    
+                    gl::ScopedMatrices mat;
+                    gl::rotate( mCamera.getOrientation() );
+                    drawCircle();
+                    drawCorona();
+                }
+            
                 drawGlows();
                 drawNebulas();
     
@@ -475,17 +505,16 @@ void StarApp::drawRenderPass()
 
 void StarApp::draw()
 {
-	gl::clear( Color( 0.2, 0.2, 0.2 ) );
+	gl::clear( Color( 0.0, 0.0, 0.0 ) );
 
-    
-   
-    
     {
         gl::ScopedMatrices mat;
         gl::setMatrices(mCamera);
     
         drawRenderPass();
     }
+    
+   // mParams->draw();
     
 }
 
@@ -507,4 +536,4 @@ void StarApp::updateTime()
     //console()<<mTimeAdjusted<<std::endl;
 }
 
-CINDER_APP( StarApp, RendererGl )
+CINDER_APP( StarApp, RendererGl( RendererGl::Options().msaa( 32 ) ) )
